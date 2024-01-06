@@ -1,77 +1,82 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace Szyfr_Polybius
+class Program
 {
-    class PolybiusCipher
+    static void Main()
     {
-        private Dictionary<char, string> encryptionTable = new Dictionary<char, string>
-        {
+        string originalText = "HELLO WORLD";
+        string encryptedText = Encrypt(originalText);
+        string decryptedText = Decrypt(encryptedText);
 
-            {'A', "11"}, {'B', "12"}, {'C', "13"}, {'D', "14"}, {'E', "15"},
-            {'F', "21"}, {'G', "22"}, {'H', "23"}, {'I', "24"}, {'J', "24"},
-            {'K', "25"}, {'L', "31"}, {'M', "32"}, {'N', "33"}, {'O', "34"},
-            {'P', "35"}, {'Q', "41"}, {'R', "42"}, {'S', "43"}, {'T', "44"},
-            {'U', "45"}, {'V', "51"}, {'W', "52"}, {'X', "53"}, {'Y', "54"},
-            {'Z', "55"}, {' ', " "}
+        Console.WriteLine("Original Text: " + originalText);
+        Console.WriteLine("Encrypted Text: " + encryptedText);
+        Console.WriteLine("Decrypted Text: " + decryptedText);
+    }
+
+    static string Encrypt(string input)
+    {
+        input = input.ToUpper();
+        char[,] polybiusSquare = {
+            {'A', 'B', 'C', 'D', 'E'},
+            {'F', 'G', 'H', 'I', 'K'},
+            {'L', 'M', 'N', 'O', 'P'},
+            {'Q', 'R', 'S', 'T', 'U'},
+            {'V', 'W', 'X', 'Y', 'Z'}
         };
 
-        private Dictionary<string, char> decryptionTable;
+        string encryptedText = "";
 
-        public PolybiusCipher()
+        foreach (char c in input)
         {
-            decryptionTable = new Dictionary<string, char>();
-            foreach (var entry in encryptionTable)
+            if (c == 'J') // Handling the special case for 'J' (I and J share the same cell)
             {
-                decryptionTable[entry.Value] = entry.Key;
+                encryptedText += "24 ";
+                continue;
             }
-        }
 
-        public string Encrypt(string input)
-        {
-            input = input.ToUpper();
-            string encryptedText = "";
-
-            foreach (char letter in input)
+            for (int i = 0; i < 5; i++)
             {
-                if (encryptionTable.ContainsKey(letter))
+                for (int j = 0; j < 5; j++)
                 {
-                    encryptedText += encryptionTable[letter];
+                    if (polybiusSquare[i, j] == c)
+                    {
+                        encryptedText += (i + 1).ToString() + (j + 1).ToString() + " ";
+                    }
                 }
             }
-
-            return encryptedText;
         }
 
-        public string Decrypt(string input)
-        {
-            string decryptedText = "";
-            for (int i = 0; i < input.Length; i += 2)
-            {
-                string pair = input.Substring(i, 2);
-                if (decryptionTable.ContainsKey(pair))
-                {
-                    decryptedText += decryptionTable[pair];
-                }
-            }
-
-            return decryptedText;
-        }
+        return encryptedText.Trim();
     }
 
-    class Program
+    static string Decrypt(string input)
     {
-        static void Main()
+        string[] pairs = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        char[,] polybiusSquare = {
+            {'A', 'B', 'C', 'D', 'E'},
+            {'F', 'G', 'H', 'I', 'K'},
+            {'L', 'M', 'N', 'O', 'P'},
+            {'Q', 'R', 'S', 'T', 'U'},
+            {'V', 'W', 'X', 'Y', 'Z'}
+        };
+
+        string decryptedText = "";
+
+        foreach (string pair in pairs)
         {
-            PolybiusCipher cipher = new PolybiusCipher();
+            int row = int.Parse(pair[0].ToString()) - 1;
+            int col = int.Parse(pair[1].ToString()) - 1;
 
-            string plaintext = "HELLO WORLD";
-            string encryptedText = cipher.Encrypt(plaintext);
-            Console.WriteLine("Zaszyfrowany tekst: " + encryptedText);
-
-            string decryptedText = cipher.Decrypt(encryptedText);
-            Console.WriteLine("Odszyfrowany tekst: " + decryptedText);
+            if (row == 4 && col == 2) // Handling the special case for 'J' (I and J share the same cell)
+            {
+                decryptedText += "I";
+            }
+            else
+            {
+                decryptedText += polybiusSquare[row, col];
+            }
         }
-    }
 
+        return decryptedText;
+    }
 }
